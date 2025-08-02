@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corazón Animado con Partículas</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f9f0f0;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 40px;
+            font-size: 24px;
+            position: absolute;
+            top: 20px;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .heart-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .heart {
+            width: 100px;
+            height: 90px;
+            position: relative;
+            cursor: pointer;
+            transform: scale(1);
+            transition: transform 0.1s linear;
+            --heart-color: #ff6b6b;
+            z-index: 10;
+        }
+
+        .heart:before, .heart:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            width: 50px;
+            height: 80px;
+            background: var(--heart-color);
+            border-radius: 50px 50px 0 0;
+            transition: background 0.3s ease;
+        }
+
+        .heart:before {
+            left: 50px;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+
+        .heart:after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+        }
+
+        .name {
+            position: absolute;
+            color: white;
+            font-size: 0px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            width: 80%;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 11;
+        }
+
+        .heart.active ~ .name {
+            opacity: 1;
+            font-size: 44px;
+        }
+
+        .heart.active ~ h1 {
+            opacity: 0;
+        }
+
+        /* Partículas de corazones */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            display: block;
+            width: 20px;
+            height: 18px;
+            background: transparent;
+            pointer-events: none;
+            opacity: 0.6;
+            animation: float linear infinite;
+        }
+
+        .particle:before, .particle:after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 14px;
+            background: #ffb6c1;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .particle:before {
+            left: 10px;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+
+        .particle:after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Mantén presionado el corazón</h1>
+    
+    <div class="container">
+        <div class="heart-container">
+            <div class="heart" id="heart"></div>
+            <div class="name" id="name">🥰 I Love Gina 🥰
+            </div>
+        </div>
+    </div>
+
+    <div class="particles" id="particles"></div>
+
+    <script>
+        const heart = document.getElementById('heart');
+        const name = document.getElementById('name');
+        const title = document.querySelector('h1');
+        const particlesContainer = document.getElementById('particles');
+        let scale = 1;
+        let growInterval;
+        const SHOW_TEXT_THRESHOLD = 3.5;
+        
+        // Crear partículas de corazones
+        function createParticles() {
+            const particleCount = 15;
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    createParticle();
+                }, i * 300);
+            }
+        }
+
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Tamaño aleatorio
+            const size = Math.random() * 10 + 10;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size * 0.9}px`;
+            
+            // Posición inicial aleatoria
+            particle.style.left = `${Math.random() * 100}vw`;
+            particle.style.bottom = `-50px`;
+            
+            // Color aleatorio pastel
+            const colors = ['#ffb6c1', '#ffc0cb', '#ff69b4', '#ff1493', '#db7093'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.setProperty('--heart-color', color);
+            
+            // Duración de animación aleatoria
+            const duration = Math.random() * 15 + 10;
+            particle.style.animationDuration = `${duration}s`;
+            
+            particlesContainer.appendChild(particle);
+            
+            // Eliminar partícula después de que termine la animación
+            setTimeout(() => {
+                particle.remove();
+                createParticle(); // Crear nueva partícula
+            }, duration * 1000);
+        }
+
+        function startGrowing() {
+            scale = 1;
+            clearInterval(growInterval);
+            growInterval = setInterval(() => {
+                scale += 0.05;
+                heart.style.transform = `scale(${scale})`;
+                
+                const redValue = Math.min(255, 150 + scale * 20);
+                const color = `rgb(${redValue}, ${100 - scale * 10}, ${100 - scale * 10})`;
+                heart.style.setProperty('--heart-color', color);
+                
+                if (scale >= SHOW_TEXT_THRESHOLD) {
+                    heart.classList.add('active');
+                } else {
+                    heart.classList.remove('active');
+                }
+                
+            }, 50);
+            
+            title.style.opacity = '0';
+        }
+        
+        function stopGrowing() {
+            clearInterval(growInterval);
+            heart.style.transform = 'scale(1)';
+            heart.classList.remove('active');
+            title.style.opacity = '1';
+        }
+        
+        // Iniciar todo
+        heart.addEventListener('mousedown', startGrowing);
+        heart.addEventListener('mouseup', stopGrowing);
+        heart.addEventListener('mouseleave', stopGrowing);
+        
+        heart.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            startGrowing();
+        });
+        
+        heart.addEventListener('touchend', stopGrowing);
+        
+        // Iniciar partículas
+        createParticles();
+    </script>
+</body>
+</html>
